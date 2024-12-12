@@ -2,52 +2,401 @@
 title: "Detecting and Disambiguating “Hidden” Cochlear Pathologies"
 author: "Samantha Hauser"
 date: "2024-12-11"
-output: pdf_document
-bibliography: references2.bib
-nocite: '@*'
+output: 
+  pdf_document:
+    latex_engine: xelatex
+bibliography: ./References/references2.bib
+link-citations: true
+csl: begell-house-apa
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(bookdown)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
+# Abstract
+
+The standard hearing test evaluates the softest level of sound that a
+person can hear across a range of frequencies that are important for
+speech understanding. While this test is what determines a diagnosis of
+hearing loss, many people with clinically normal hearing sensitivity
+report difficulties hearing, especially in noisy places. One potential
+explanation for these contradictory findings is that the hearing test is
+unable to detect all types of inner ear pathologies. These disorders,
+such as inner hair cell dysfunction or cochlear synaptopathy, impact the
+neural coding of sound, but are not detectable by current clinical
+hearing measures. As a result, they are considered sources of "hidden"
+hearing loss. In this study, I investigate whether other measures can
+serve as biomarkers of these hidden pathologies and whether those
+biomarkers are able to distinguish ears with experimentally-induced
+inner hair cell damage from those with cochlear synaptopathy. I assessed
+four measures of auditory function in chinchillas before and after
+exposure to either carboplatin which creates inner hair cell dysfunction
+or exposure to noise which creates cochlear synaptopathy. These four
+measures include to measures that should be unaffected by hidden hearing
+loss--the standard hearing test (ABR) and a measure of outer hair cell
+function (DPOAEs)--and two measures sensitive to neural integrity and
+are the most likely to be changed as a result of these exposures--MEMR
+and the EFR. Ultimately, this work is an important step toward a more
+precise diagnosis of hearing impairments, which is greatly needed as
+targeted pharmaceutical interventions for inner ear dysfunctions become
+a reality.
+
 # Introduction
-  Some types of damage to the inner ear are not detected by standard, clinical hearing tests. In this study, I investigate two such “hidden” pathologies, inner hair cell (IHC) damage and cochlear synaptopathy (CS), which can masquerade as clinically normal hearing despite potentially having detrimental effects on speech perception. This dataset aims to identify whether other biomarkers of auditory function are more sensitive to these two pathologies than the traditional hearing test, and if any of these biomarkers differentiate between IHC damage and CS.
-The primary goal of this study is to investigate biomarkers for two different inner ear pathologies typically hidden from standard hearing testing. 
 
-## I will use this dataset to answer the following questions: 
-1.	Are any of the biomarkers (ABR, EFR, MEMR, DPOAE) sensitive to inner hair cell damage or cochlear synaptopathy? i.e., are pre-exposure responses different from post-exposure responses?
-2.	Does IHC damage affect the biomarkers differently than CS? i.e., are post-exposure responses for the two groups different across any of the individual biomarkers? 
-3.	Can integration of results across biomarkers better differentiate the groups than a single biomarker alone? 
+In the audiology clinic, hearing is assessed by determining the softest
+sound level that someone can hear across a range of frequencies
+important for understanding speech. Thresholds at each frequency are
+plotted for both ears, and this is called the audiogram. If thresholds
+are less than 25 dB HL, the person is said to have normal hearing. If
+thresholds are greater than 25 dB HL, they are considered to have
+hearing loss. However, not all people with a normal audiogram will have
+normal perception of sound in all situations. Approximately 12% of
+individuals with normal hearing complain that they have trouble hearing
+in noisy places [@tremblay_self-reported_2015], like in a crowded
+restaurant.
 
-## Following the above aims, I hypothesize that: 
-1. ABR and DPOAEs will not be different before and after exposure since they are primarily driven by outer hair cell function rather than inner hair cell function. EFR amplitudes and MEMR thresholds will both be significantly worse in the post-exposure condition compared to the pre-exposure condition. 
-2. While both CS and IHC dysfunction will both reduce EFR amplitudes, MEMR thresholds will be reduced more in the TTS group than the CA group.
-3. Integration across all biomarkers will differentiate between the CA and TTS exposure groups better than any individual metric.
+One reason that some people may struggle to hear despite normal hearing
+sensitivity is that some types of damage to the inner ear are not
+detected by standard, clinical hearing tests. Two such “hidden”
+pathologies are inner hair cell (IHC) damage and cochlear synaptopathy
+(CS). These dysfunctions have bth been shown to masquerade as clinically
+normal hearing despite potentially having detrimental effects on speech
+perception. IHCs are responsible for transducing the mechanical and
+fluid motion in the cochlea to the auditory nerve by releasing
+neurotransmitters when stimulated. If inner hair cells in a given region
+of the cochlea die completely, no signal would be sent to the auditory
+nerve. But if only a few cells are lost or only some of the stereocilia
+is damaged, the signal can be transmitted but with poorer fidelity.
+Thus, detection of a simple sound may still be possible, but
+discrimination and understanding of complex signals becomes more
+difficult. In cases of cochlear synaptopathy, the IHCs are intact, but
+the connections between the auditory nerve and the hair cell have been
+disrupted (i.e., the synapse). So, as in cases of IHC damage, detection
+of sounds may still be possible, but perception is altered.
+
+Prior work has attempted to find biomarkers of CS since it is believed
+to be prevalent in the normal hearing and aging populations. Most
+metrics thought to detect CS reflect changes to the neural pathway, but
+are potentially confounded by IHC dysfunction which similarly changes
+these pathways. In animal models, it is easy to experimentally induce
+these specific effects and see how they affect different diagnostic
+measures. In chinchillas, a chemotheraputic drug called Carboplatin (CA)
+selectively damages IHCs, but leaves other cochlear structures unharmed.
+CS can also be induced by exposing animals to a moderately loud noise
+which results in a temporary hearing threshold shift (TTS) that returns
+to normal after a few days. Using these models, I aimed to identify
+whether there are biomarkers of auditory function that are more
+sensitive to these two pathologies than the traditional hearing test,
+and if any of these biomarkers can differentiate between IHC damage and
+CS.
+
+# Aims and Hypotheses
+
+I will use this dataset to answer the following questions:
+
+1.  Are any of the biomarkers (ABR, EFR, MEMR, DPOAE) sensitive to inner
+    hair cell damage or cochlear synaptopathy? i.e., are pre-exposure
+    responses different from post-exposure responses?
+    [Hypothesis:]{.underline} ABR and DPOAEs will not be different
+    before and after exposure since they are primarily driven by outer
+    hair cell function rather than inner hair cell function. EFR
+    amplitudes and MEMR thresholds will both be significantly worse in
+    the post-exposure condition compared to the pre-exposure condition.
+
+2.  Does IHC damage affect the biomarkers differently than CS? i.e., are
+    post-exposure responses for the two groups different across any of
+    the individual biomarkers? [Hypothesis:]{.underline} While both CS
+    and IHC dysfunction will both reduce EFR amplitudes, MEMR thresholds
+    will be reduced more in the TTS group than the CA group.
+
+3.  Can integration of results across biomarkers better differentiate
+    the groups than a single biomarker alone? [Hypothesis:]{.underline}
+    Integration across all biomarkers will differentiate between the CA
+    and TTS exposure groups better than any individual metric.
 
 # Methods
-  Chinchillas are a commonly used animal model of human hearing (Trevino et al., 2019). 16 chinchillas were randomly assigned to one of two exposure groups, maintaining an equal number of male and female chinchillas in each group. One group was exposed to noise for 2 hours to induce cochlear synaptopathy (Kujawa & Liberman, 2009). This group is labeled TTS because the noise exposure causes a temporary threshold shift (TTS) that recovers after two weeks. The other group was administered Carboplatin (CA) to induce mild (~15%) selective inner-hair-cell loss and significant stereocilia dysfunction in the surviving inner hair cells (Lobarinas et al., 2013). All data was collected at Purdue University as part of my thesis project. Both before and 2 weeks after the exposure, hearing was evaluated using 4 different biomarkers sensitive to at least CS: 
-  
-## Measures
-1.	Auditory Brainstem Response (ABR) Thresholds: This is the gold standard for clinical assessment of hearing. Tone bursts at different frequencies elicit an electrical response which is measured from subdermal needle electrodes. The lowest sound level which elicits a repeatable response is deemed to be the hearing threshold. Thresholds were measured at 500, 1000, 2000, 4000, and 8000 Hz.
-2.	Envelope Following Response (EFR): the electrophysiological response to a rectangular amplitude modulated (RAM) tone was recorded. The EFR amplitude was calculated as the sum of the first four harmonics of the modulation frequency (Vasilkov et al, 2019). 
-3.	Middle Ear Muscle Reflex (MEMR) Threshold: The lowest noise level that elicited a contraction of the middle ear muscle was recorded (Mepani et al., 2020). 
-4.	Distortion Product Otoacoustic Emissions (DPOAEs): DPOAEs were measured from 500-16000 Hz and reported as the weighted average at 9 discrete half-octave frequency bands from 750-12000 Hz (Abdala et al, 2018). 
+
+Chinchillas are a commonly used animal model of human hearing
+[@trevino_chinchilla_2019]. 16 chinchillas were randomly assigned to one
+of two exposure groups, maintaining an equal number of male and female
+chinchillas in each group. One group was exposed to noise for 2 hours to
+induce cochlear synaptopathy [@kujawa_adding_2009]. This group is
+labeled TTS because the noise exposure causes a temporary threshold
+shift (TTS) in hearing sensitivity that recovers after two weeks. The
+other group was administered Carboplatin (CA) to induce mild (\~15%)
+selective inner-hair-cell loss and significant stereocilia dysfunction
+in the surviving inner hair cells [@lobarinas_insensitivity_2013]. All
+data was collected at Purdue University as part of my thesis project.
+Hearing was evaluated using 4 different biomarkers before exposure and 2
+weeks after the exposure.
+
+## Biomarkers
+
+1.  Auditory Brainstem Response (ABR) Thresholds: This is the gold
+    standard for clinical assessment of hearing in subjects that cannot
+    participate in a traditional behavioral hearing test. It is
+    typically used to test hearing of infants, but is also regularly
+    used for assessing the hearing of animal models. Short tone bursts
+    are presented to one ear at a time at different frequencies. These
+    signals, when audible, elicit a stereotypic electrical response
+    which is measured from subdermal needle electrodes. Tones are played
+    from 0 to 80 dB SPL. The lowest sound level which elicits a
+    repeatable response is deemed to be the hearing threshold.
+    Thresholds were measured at 500, 1000, 2000, 4000, and 8000 Hz.
+2.  Envelope Following Response (EFR): The envelope following response
+    is an electrophysiological response to a sustained stimulus. In this
+    case, a 4000 Hz tone modulated by a rectangular pulse (at a rate of
+    223 Hz with a 25% duty cycle) was presented to one ear at
+    alternating polarities and the neural response was recorded. The
+    positive and negative polarity trials were summed and averaged,
+    which eliminates the response to the tonal carrier and shows the
+    response to the envelope of the stimulus, which in this case was 223
+    Hz. The time domain response was converted to the frequency domain
+    via a discrete fourier transform. The energy at the fundamental
+    frequency (223 Hz) and the next three harmonics (446, 669, 892 Hz)
+    was summed and is called the EFR magnitude
+    [@vasilkov_enhancing_2021].
+3.  Middle Ear Muscle Reflex (MEMR) Threshold: A contraction of the
+    middle ear muscle in response to a loud sound results in a change in
+    absorbance that can be measured. A series of broadband noise that
+    increased in level were played, and the noise level that resulted in
+    a minimum change in absorbance of 0.1 was recorded as the threshold
+    [@mepani_2020].
+4.  Distortion Product Otoacoustic Emissions (DPOAEs): DPOAEs are an
+    acoustic signal that is emitted from the ear in response to two
+    input tones. When the outer hair cells (OHCs) are functional, a high
+    amplitude response is measured. Where there is OHC dysfunction,
+    amplitudes drop. DPOAEs were measured from 500-16000 Hz and reported
+    as the weighted average at 9 discrete half-octave frequency bands
+    from 750-12000 Hz [@abdala_2018].
+
+Prior studies of CS suggest that the MEMR and the EFR should be
+sensitive to CS, but the ABR and DPOAEs should be unchanged. The EFR and
+MEMR measurements require good function of the auditory nerve, so EFR
+and MEMR are likely to be reduced in IHC damage and CS.
 
 # Results
+
 ## Effect of Exposure
-## Can CA and TTS be differentiated? 
+
+First, I investigated how each exposure type affected each biomarker.
+Figure \ref{aim1-abr} shows how the auditory brainstem response
+(ABR)were affected by the exposures. The ABR can be thought of as a
+proxy for the hearing test as it reflects the softest level of sound
+that generates a repeatable neural response. There was a significant
+effect of status (i.e., pre vs post exposure; F = 14.194, df = 1, p =
+0.0002) meaning that both groups had thresholds that were slightly worse
+after exposure, but there was no effect of group (CA vs TTS; F = 0.307,
+df = 1, p = 0.588), frequency (F = 1.864, df = 4, p = 0.121), or
+Group:Status interaction (F = 1.836, df = 1, p = 0.178).
+
+Figure \ref{aim1-dp} evaluated the effect on DPOAEs. Here, I found a
+significant effect of frequency (F=56.756, df=8, p \< 2.2e-16)--there
+are clear differences in amplitude across frequency with the
+mid-frequencies consistently showing the largest amplitudes. I also
+found a Group:Status interaction (F=16.360, df=1, p = 7.081e-5).
+Following the CA exposure, we see a slight increase in DPOAEs, but we
+see the opposite effect in the TTS group.
+
+On average, we see that MEMR thresholds increase in the TTS group after
+exposure (Figure \ref{aim1-memr}), but the responses are highly variable
+with some animals showing an improvement in threshold after TTS
+exposure. Likely because of this variability, I found no main effect of
+group (F=0.315, df=2, p=0.584) or status (F=0.693, df=1, 0.4191). There
+was also no significant interaction (F=0.698, df=1, p=0.4173) between
+group and status.
+
+Lastly, the EFR worsened significantly for both the CA and TTS groups
+(Figure \ref{aim1-efr}). EFR magnitude was significantly lower after
+exposure than before exposure (F=12.9075, df=1, p=0.00314). Though there
+was an effect of status, there was no effect of group (F=0.2507, df=1,
+p=0.62441 ) or an interaction (F=0.9355, df=1 p=0.35054). Both CA and
+TTS appear to affect EFR magnitude the same way.
+
+In summary, the EFR magnitude appears to be sensitive to both CA and TTS
+and DPOAEs were effected in different ways across the groups. I did see
+that both exposures changed hearing thresholds, which was unexpected
+given that these exposures were believed to introduce "hidden" hearing
+loss.
+
+## Can CA and TTS be differentiated?
+
+In the audiology clinic, we do not often have a baseline hearing test to
+compare to. Most people do not get a hearing test until after they are
+experiencing hearing problems. Thus, to maximize translation of these
+biomarkers to the audiology clinic, we want to identify a metric that
+will differentiate between the two pathologies, even if there is not a
+baseline to compare to. Thus, for the following analyses, I filtered the
+data to only the post-exposure time point to compare the two groups.
+
+When comparing the post-exposure groups, we find that there is a
+significant effect of group on ABR thresholds (Figure \ref{aim2-abr};
+F=6.226, df=1, p=0.0149). There is no effect of group on DPOAE
+amplitudes (\ref{aim2-dp}; F=0.8547, df=1, p=0.3568), despite the
+Group:Status interaction seen in Figure \ref{aim1-dp}. It is likely that
+these subtle changes relative to baseline are obscured when only looking
+at the post-exposure data. Additionally, there was no effect of group on
+MEMR thresholds (Figure \ref{aim2-memr}; F=0.0274, df=1, p=0.871) nor
+EFR magnitude (Figure \ref{aim2-efr}; F=0.1086, df=1, p=0.747).
+
+Though there are no significant findings for these other biomarkers, we
+see some trends. MEMR thresholds are higher (worse) in the TTS group on
+average, and EFR amplitudes are lower (worse) in the CA group than the
+TTS group. Despite this, there is significant variability across the
+groups. For example, two TTS animals show very low MEMR thresholds
+despite the rest of the group showing higher MEMR thresholds.
+Interestingly, the only biomarker that seemed to differentiate between
+the groups was the ABR, which should have not been affected at all in
+either of these exposure conditions. Although the post-exposure ABR
+thresholds were still in the normal range for both groups, when closely
+compared, we do find the ABR thresholds to consistently be slightly
+better for the TTS group than the CA group.
+
 ## Biomarker Integration
 
+The effects of IHC damage and CS are subtle and have similar effects on
+the processing of auditory signals. In the final aim, I asked whether a
+combination of metrics was better able to separate the CA and TTS
+exposure groups. First, I split the data into a training set (75%) and a
+test set (remaining 25% of the subjects). I created a 10-fold cross
+validation set from the training data. Then I used a decision tree
+classifier and the following model which incorporates values from each
+of the metrics used in the study:
 
-# Conclusions
-<div id = "ref> 
+$$
+Group \sim Sex + ABR_{500}  + ABR_{1000} + ABR_{2000} + ABR_{4000}  + ABR_{8000}    +
+$$ $$
+DP_{707}    + DP_{1000} +   DP_{1414}   + DP_{2000} +DP_{2828}+ DP_{4000}   +DP_{5656}  +DP_{8000}+ DP_{11313} +
+$$ $$
+MEMR_{threshold}    +   EFR_{amp}
+$$ I then fit the re-sampled training data with the model. Ultimately,
+the training data showed only \~50% accuracy--it labeled all animals as
+being in the CA group. I then tried other techniques for classification
+including a random forest, and SVM. No method improved the accuracy.
+
+# Discussion
+
+The results of this study provide valuable insight into diagnostics of
+hearing loss. The results show that there are effects on our battery of
+biomarkers in both exposure groups. TTS created a slight elevation in
+thresholds, a slight decline in DPOAEs, and a decline in EFR magnitude.
+CA similarly increased ABR thresholds and decreased EFR magnitude, but
+the DPOAEs increased slightly, the opposite effect of TTS.
+
+Despite these changes relative to baseline, the only signficant group
+effect was on the ABR thresholds. With the other biomarkers, the groups
+could not be differentiated from each other when only using the
+post-exposure data, a condition more common to the audiology clinic
+where baseline tests are not always available. Integration across all
+biomarkers in a single model did not aid in classification. We see that
+there is a large degree of individual variability in both exposure
+groups, which potentially impacted our ability to classify the groups.
+We should also look to see if some animals are outliers. Although all
+animals underwent the same process for the exposure that they were
+assigned to, we see differences in the effect and its possible that some
+animals have cochlear pathologies beyond the ones we aimed to isolate in
+this study, such as OHC dysfunction which has been shown to elevate
+hearing thresholds and decrease DPOAE amplitudes. Given the variability
+in effect of the exposure, a larger group of animals may be valuable for
+future studies.
+
+One surprising finding was the Group:Status interaction for DPOAEs found
+in Aim 1 (see Figure \ref{aim1-dp} ). The CA group showing an increase
+in DPOAE amplitude was unexpected. If DPOAEs measures OHC function, and
+OHC function was unchanged, why do the amplitudes improve? We believe
+this may have to do with a change in the efferent feedback to the
+cochlea. With IHC dysfunction, the afferent input to the auditory nerve
+is reduced, which in turn reduces how much efferent feedback there is to
+the OHCs, potentially "unmasking" their activity.
+
+Our inability to differentiate the CA-induced inner hair cell
+dysfunction from TTS-induced cochlear synaptopathy has important
+implications for hearing research broadly. Many papers over the last
+decade have raced to find biomarkers of cochlear synaptopahty given its
+potential implications for speech perception, but few have considered
+that IHC dysfunction more broadly could mirror the effects of CS. We
+find that the two groups are largely indistinguishable with these common
+measures. Studies should be careful to consider the potential confound
+of IHC dysfunction in studies of CS.
+
+## Limitations
+
+This work could be improved in two ways. First, future studies should
+consider additional metrics that may help to classify these two types of
+pathologies. There are many metrics than can be derived from each of the
+biomarkers used here. For example, rather than looking at ABR
+thresholds, one could look at changes in latency of the response or
+amplitude of the neural response. Some studies have also suggested that
+a ratio of the waves in the ABR could be an indicator of cochlear
+synaptopathy. Inclusion of these metrics could prove informative where
+the two groups could not previously be separated. Secondly, including
+histological analyses of the cochleas would be valuable. In this
+project, I have only grouped the animals by the exposure that they
+received, but I have not yet confirmed that the exposure created exactly
+the pathology we expect for each individual. Prior studies from our lab
+have confirmed these exposure parameters and the type of dysfunction
+that they induce, but this can vary across individuals. In this study we
+are using exposure group as a proxy for the type of pathology the
+animals have, but rather than predicting the exposure group that the
+animal belongs to, we ultimately hope that we can use these biomarkers
+to predict the degree of each specific dysfunction present. Precision
+diagnostics for specific cochlear pathologies are necessary for identify
+the appropriate candidates for pharmaceutical interventions which target
+specific cochlear dysfunctions.
+
+# GitHub
+
+All code can be found on github at
+<https://github.com/hausersn1/DS4B695_FinalProject>
+
+```{=tex}
+\begin{figure}
+  \centering
+  \includegraphics{"./figs/1_ABR.png"}
+  \caption{Auditory Brainstem Response (ABR) thresholds before (pre; black) and after (post; red) either CA (left) or TTS (right) exposure. Light lines in the background represent individual animals and the thick/opaque lines represent the mean. Error bars reflect one standard deviation above and below the mean.}
+  \label{aim1-abr}
+\end{figure}
+\begin{figure}
+  \centering
+  \includegraphics{"./figs/1_DPOAE.png"}
+    \caption{Distortion product otoacoustic emissions (DPOAEs) before (black) and after (red) either CA or TTS exposure from 707 Hz to 11313 Hz. Light tracings represent individual subject data and the solid lines represent the mean plus and minus one standard deviation.}
+  \label{aim1-dp}
+\end{figure}
+\begin{figure}
+  \centering
+  \includegraphics{"./figs/1_MEMR.png"}
+  \caption{Box plots of middle ear muscle reflex (MEMR) thresholds before (black) and after (red) either CA or TTS exposure. Individual subject points are plotted in the background with circles representing female subjects and triangles for male subjects.}
+  \label{aim1-memr}
+\end{figure}
+\begin{figure}
+  \centering
+  \includegraphics{"./figs/1_RAM.png"}
+  \caption{Envelope following response magnitude before (black) and after (red) either CA or TTS exposure. Again, individual points are plotted with females as cirlces and males as triangles. EFR magnitudes decrease in both exposure groups.}
+  \label{aim1-efr}
+\end{figure}
+
+\begin{figure}   \centering   \includegraphics{"./figs/2_ABR.png"}   \caption{Post-exposure ABR thresholds for both CA (blue) and TTS (pink) exposure groups. Circles reflect female subjects and triangles reflect male subjects.}   \label{aim2-abr} \end{figure} 
+
+\begin{figure}   \centering   
+\includegraphics{"./figs/2_DPOAE.png"}   
+\caption{DPOAE amplitudes at 9 frequency points after either CA (blue) or TTS (pink) exposure. Circles reflect female subjects and triangles reflect male subjects.}   \label{aim2-dp} 
+\end{figure}
+\begin{figure}   
+\centering   
+\includegraphics{"./figs/2_MEMR.png"}   
+\caption{Middle ear muscle reflex (MEMR) thresholds after either CA (blue) or TTS (pink) exposure. MEMR thresholds are higher on average in the TTS group, but the difference is not significant. Female subjects are plotted as circles and males as triangles.}   
+\label{aim2-memr} 
+\end{figure}
+
+\begin{figure} \centering   \includegraphics{"./figs/2_RAM.png"}   \caption{Envelope following response magnitude in the two exposure groups with CA in blue, TTS in red. Both groups show reduced EFR magnitude compared to baseline, but there is no significant difference between the two groups in only the post-exposure data.Female subjects are plotted as circles and males as triangles. For comparison, the average pre-exposure EFR magnitude was ~0.55 uV.}   \label{aim2-efr} \end{figure}
+```
+\pagebreak
 # References
-Abdala, C., Guardia, Y. C., & Shera, C. A. (2018). Swept-tone stimulus-frequency otoacoustic emissions: Normative data and methodological considerations. The Journal of the Acoustical Society of America, 143(1), 181–192. https://doi.org/10.1121/1.5020275
-Kujawa, S. G., & Liberman, M. C. (2009). Adding Insult to Injury: Cochlear Nerve Degeneration after “Temporary” Noise-Induced Hearing Loss. Journal of Neuroscience, 29(45), 14077–14085. https://doi.org/10.1523/JNEUROSCI.2845-09.2009
-Lobarinas, E., Salvi, R., & Ding, D. (2013). Insensitivity of the audiogram to carboplatin induced inner hair cell loss in chinchillas. Hearing Research, 302, 113–120. https://doi.org/10.1016/j.heares.2013.03.012
-Mepani, A. M., Kirk, S. A., Hancock, K. E., Bennett, K., de Gruttola, V., Liberman, M. C., & Maison, S. F. (2020). Middle Ear Muscle Reflex and Word Recognition in “Normal-Hearing” Adults: Evidence for Cochlear Synaptopathy? Ear and Hearing, 41(1), 25–38. https://doi.org/10.1097/AUD.0000000000000804
-Trevino, M., Lobarinas, E., Maulden, A. C., & Heinz, M. G. (2019). The chinchilla animal model for hearing science and noise-induced hearing loss. The Journal of the Acoustical Society of America, 146(5), 3710–3732. https://doi.org/10.1121/1.5132950
-Vasilkov, V., Garrett, M., Mauermann, M., & Verhulst, S. (2021). Enhancing the sensitivity of the envelope-following response for cochlear synaptopathy screening in humans: The role of stimulus envelope. Hearing Research, 400, 108132. https://doi.org/10.1016/j.heares.2020.108132
-</div>
+
 

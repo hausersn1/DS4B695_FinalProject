@@ -13,7 +13,7 @@ library(khroma)
 library(embed)
 library(ranger)
 library(kernlab)
-library(tinymodels)
+library(tidymodels)
 library(lme4)
 library(car)
 
@@ -31,7 +31,7 @@ dat$Subject <- factor(dat$Subject)
 abr <- dat[1:9] %>% pivot_longer(cols = 5:9, names_to = "freq", values_to = "threshold" ) 
 # Rename values in 'category' column
 abr <- abr %>%
-  mutate(freq = recode(freq,"ABR_thresh_500" = .5,
+  mutate(freq = dplyr::recode(freq,"ABR_thresh_500" = .5,
                        "ABR_thresh_1000" = 1,
                        "ABR_thresh_2000" = 2,
                        "ABR_thresh_4000" = 4,
@@ -61,21 +61,22 @@ abr_fig
 
 ggsave("./figs/1_ABR.png",
        plot = last_plot(),
-       width = 5.5,
-       height = 4,
+       width = 5,
+       height = 3.5,
        units = "in",
        dpi = 600)
 
 ### model
-mod_abr <- lmer(data = abr, threshold ~ Group*Status*freq + (1|Subject))
-Anova(mod_abr)
+mod_abr <- lmer(threshold ~ Group*Status*freq + (1|Subject), data = abr)
+Anova(mod_abr, test.statistic = 'F')
 
 ## DPOAE 
-dpoae <- dat %>% select(c("Subject", "Group", "Status", "Sex") | starts_with("DP") ) %>% pivot_longer(cols = 5:13, names_to = "freq", values_to = "amplitude" ) 
+dpoae <- dat %>% select(c("Subject", "Group", "Status", "Sex") | starts_with("DP") ) %>% 
+  pivot_longer(cols = 5:13, names_to = "freq", values_to = "amplitude" ) 
 
 # Rename values in 'category' column
 dpoae <- dpoae %>%
-  mutate(freq = recode(freq,"DP_amplitude_707" = .7,
+  mutate(freq = dplyr::recode(freq,"DP_amplitude_707" = .7,
                        "DP_amplitude_1000" = 1,
                        "DP_amplitude_1414" = 1.4,
                        "DP_amplitude_2000" = 2,
@@ -106,14 +107,14 @@ dpoae_fig
 
 ggsave("./figs/1_DPOAE.png",
        plot = last_plot(),
-       width = 5.5,
-       height = 4,
+       width = 5,
+       height = 3.5,
        units = "in",
        dpi = 600)
 
 ### model
 mod_dpoae <- lmer(data = dpoae, amplitude ~ Group*Status*freq + (1|Subject))
-Anova(mod_dpoae)
+Anova(mod_dpoae, test.statistic = 'F')
 
 ## RAM 
 ram <- dat %>% select(c("Subject", "Group", "Status", "Sex") | starts_with("RAM_amplitude") ) 
@@ -126,7 +127,7 @@ ram_fig <-
   geom_boxplot(size = .8, alpha = .2, aes(x = Status, y=RAM_amplitude_sum, color=Status, group = Status)) +
   geom_point(size = 2, alpha = .1, aes(x = Status, y=RAM_amplitude_sum, color=Status, group = interaction(Subject, Status), shape = Sex), position = position_jitter(width=.15))  + 
   xlab("Status") + 
-  ylab("EFR Amplitude (uV)") +
+  ylab("EFR Magnitude (uV)") +
   scale_color_manual(values = c("Pre" = "black", "Post" = "red")) + 
   facet_grid(~Group) + 
   theme_bw() + 
@@ -135,15 +136,15 @@ ram_fig
   
 ggsave("./figs/1_RAM.png",
          plot = last_plot(),
-         width = 5.5,
-         height = 4,
+         width = 5,
+         height = 3.5,
          units = "in",
          dpi = 600)
 
 ### model
 mod_ram <- lmer(data = ram, RAM_amplitude_sum ~ Group*Status + (1|Subject))
 summary(mod_ram)
-Anova(mod_ram)
+Anova(mod_ram, test.statistic = "F")
 
 ## MEMR 
 
@@ -172,14 +173,14 @@ memr_fig
 
 ggsave("./figs/1_memr.png",
        plot = last_plot(),
-       width = 5.5,
-       height = 4,
+       width = 5,
+       height = 3.5,
        units = "in",
        dpi = 600)
 
 ### models
 mod_memr <- lmer(data = memr, MEMR_threshold ~ Group*Status + (1|Subject))
-Anova(mod_memr)
+Anova(mod_memr, test.statistic = 'F')
 
 
 # Aim 2: Post Only  -------------------------------------------------------
@@ -201,6 +202,13 @@ memr_fig_post <-
   theme(strip.text = element_text(size = 16), text = element_text(size = 16), legend.position = "bottom") 
 memr_fig_post
 
+ggsave("./figs/2_memr.png",
+       plot = last_plot(),
+       width = 5,
+       height = 3.5,
+       units = "in",
+       dpi = 600)
+
 # ABR post Plot
 abr_fig_post <- 
   ggplot(data = post_abr) +
@@ -216,13 +224,20 @@ abr_fig_post <-
   theme(strip.text = element_text(size = 16), text = element_text(size = 16), legend.position = "bottom") 
 abr_fig_post
 
+ggsave("./figs/2_abr.png",
+       plot = last_plot(),
+       width = 5,
+       height = 3.5,
+       units = "in",
+       dpi = 600)
+
 # DPOAE post Plot
 dpoae_fig_post <- 
   ggplot(data = post_dpoae) +
   geom_boxplot(size = .8, alpha = .2, aes(x = freq, y=amplitude, group=interaction(Group, freq), color = Group)) +
   geom_point(size = 2, alpha = .2, aes(x = freq, y=amplitude, color=Group, shape = Sex), position = position_jitter(width=.1))  + 
   xlab("Frequency") + 
-  ylab("DP Amp. (dB FPL)") +
+  ylab("Amplitude (dB FPL)") +
   scale_x_continuous(trans = 'log10', 
                      breaks = c( .5, 1, 2, 4, 8),  
                      labels = c(".5", "1", "2", "4", "8")) + 
@@ -231,30 +246,44 @@ dpoae_fig_post <-
   theme(strip.text = element_text(size = 16), text = element_text(size = 16), legend.position = "bottom") 
 dpoae_fig_post 
 
+ggsave("./figs/2_dpoae.png",
+       plot = last_plot(),
+       width = 5,
+       height = 3.5,
+       units = "in",
+       dpi = 600)
+
 # RAM post Plot
 ram_fig_post <- 
   ggplot(data = post_ram) +
   geom_boxplot(size = .8, alpha = .2, aes(x = Group, y=RAM_amplitude_sum, group=Group, color = Group)) +
   geom_point(size = 2, alpha = .2, aes(x = Group, y=RAM_amplitude_sum, color=Group, shape = Sex), position = position_jitter(width=.1))  + 
   xlab("Group") + 
-  ylab("RAM Amp. (uV)") +
+  ylab("EFR Magnitude (uV)") +
   theme_minimal() + 
   scale_color_bright() +
   theme(text = element_text(size = 16), legend.position = "bottom") 
 ram_fig_post
 
+ggsave("./figs/2_ram.png",
+       plot = last_plot(),
+       width = 5,
+       height = 3.5,
+       units = "in",
+       dpi = 600)
+
 # models for Aim 2
 mod_post_abr <- lm(data = post_abr, threshold ~ Group*freq)
-Anova(mod_post_abr)
+Anova(mod_post_abr, test.statistic = "F")
 
 mod_post_dpoae <- lm(data = post_dpoae, amplitude ~ Group*freq)
-Anova(mod_post_dpoae)
+Anova(mod_post_dpoae, test.statistic = "F")
 
 mod_post_memr <- lm(data=post_memr, MEMR_threshold ~ Group)
-Anova(mod_post_memr)
+Anova(mod_post_memr, test.statistic = "F")
 
 mod_post_ram <- lm(data = post_ram, RAM_amplitude_sum ~ Group)
-Anova(mod_post_ram)
+Anova(mod_post_ram, test.statistic = "F")
 
 
 # Aim 3: Profiling --------------------------------------------------------
@@ -409,9 +438,75 @@ augment(mod7_res_fit, new_data = mytrain) %>%
   autoplot()
 
 # PCA
-pcatest <- princomp(dat3[,2:8])
+diff2 <- na.omit(diff)
+pcatest <- princomp(diff2[,5:19])
 summary(pcatest)
+autoplot(pcatest)
 
+## Classify with Differences
+diff <- dat %>% group_by(Subject, Sex, Group) %>% 
+  summarise(d_ABR_thresh_500 = ABR_thresh_500[Status == "Pre"] - ABR_thresh_500[Status == "Post"],
+            d_ABR_thresh_1000 = ABR_thresh_1000[Status == "Pre"] - ABR_thresh_1000[Status == "Post"],
+            d_ABR_thresh_2000 = ABR_thresh_2000[Status == "Pre"] - ABR_thresh_2000[Status == "Post"], 
+            d_ABR_thresh_4000 = ABR_thresh_4000[Status == "Pre"] - ABR_thresh_4000[Status == "Post"],
+            d_ABR_thresh_8000 = ABR_thresh_8000[Status == "Pre"] - ABR_thresh_8000[Status == "Post"], 
+            d_DP_amplitude_707 = DP_amplitude_707[Status == "Pre"] - DP_amplitude_707[Status == "Post"], 
+            d_DP_amplitude_1000 = DP_amplitude_1000[Status == "Pre"] - DP_amplitude_1000[Status == "Post"],
+            d_DP_amplitude_1414 = DP_amplitude_1414[Status == "Pre"] - DP_amplitude_1414[Status == "Post"],
+            d_DP_amplitude_2000 = DP_amplitude_2000[Status == "Pre"] - DP_amplitude_2000[Status == "Post"],
+            d_DP_amplitude_2828 = DP_amplitude_2828[Status == "Pre"] - DP_amplitude_2828[Status == "Post"], 
+            d_DP_amplitude_4000 = DP_amplitude_4000[Status == "Pre"] - DP_amplitude_4000[Status == "Post"],
+            d_DP_amplitude_5656 = DP_amplitude_5656[Status == "Pre"] - DP_amplitude_5656[Status == "Post"],
+            d_DP_amplitude_8000 = DP_amplitude_8000[Status == "Pre"] - DP_amplitude_8000[Status == "Post"],
+            d_DP_amplitude_11313 = DP_amplitude_11313[Status == "Pre"] - DP_amplitude_11313[Status == "Post"],
+            d_MEMR_threshold = MEMR_threshold[Status == "Pre"] - MEMR_threshold[Status == "Post"], 
+            d_RAM_amplitude_sum = RAM_amplitude_sum[Status == "Pre"] - RAM_amplitude_sum[Status == "Post"])
+
+mysplit <- initial_split(diff, prop = 0.8, strata = Group)
+mytrain <- training(mysplit)
+mytest <- testing(mysplit) 
+my_cv <- vfold_cv(mytrain, v=10, strata = Group)
+
+rec <- recipe(Group ~., data = mytrain) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_pca(starts_with("d_"), num_comp = 5)
+
+mod6_wflow <- workflow() %>% 
+  add_recipe(rec) %>% 
+  add_model(decision_tree(mode="classification"))
+
+tune_svm <- tune_grid(
+  mod6_wflow,
+  my_cv,
+  grid = 5
+)
+
+bestval <- select_best(tune_svm)
+mod7_wflow <- finalize_workflow(mod6_wflow, bestval)
+
+final_fit <- last_fit(mod6_wflow, mysplit)
+collect_metrics(final_fit)
+collect_predictions(final_fit)
+
+mod6_fit <- mod6_wflow %>% fit(data = mytrain)
+augment(mod6_fit, new_data = mytrain) %>% 
+  conf_mat(truth=Group, estimate=.pred_class) %>% 
+  autoplot(type = "heatmap")
+
+logreg_wf <- workflow(Group ~ Sex + d_ABR_thresh_500	+ d_ABR_thresh_1000 +	
+                        d_ABR_thresh_2000 +	d_ABR_thresh_4000	+ d_ABR_thresh_8000	+
+                        d_DP_amplitude_707	+ d_DP_amplitude_1000 +	d_DP_amplitude_1414	+
+                        d_DP_amplitude_2000	+d_DP_amplitude_2828 +	d_DP_amplitude_4000	+
+                        d_DP_amplitude_5656	+ d_DP_amplitude_8000 +	d_DP_amplitude_11313 +
+                        d_MEMR_threshold	+	d_RAM_amplitude_sum, logreg_spec) 
+logreg_fit <- logreg_wf %>%
+  fit(data = mytrain)
+
+augment(logreg_fit, new_data = mytrain) %>% 
+  conf_mat(truth=Group, estimate=.pred_class) %>% 
+  autoplot(type = "heatmap")
 
 
 # extra analyses ----------------------------------------------------------
